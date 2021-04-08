@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import List
 import fasttext
 import pandas as pd
 from datetime import datetime
@@ -15,7 +16,7 @@ def clean_text(text: str, bigrams: bool = False) -> str:
     text = re.sub("\s+", " ", text)  # remove double spacing
     # text = re.sub('([0-9]+)', '', text) # remove numbers
 
-    # TODO do we want stop words>
+    # TODO do we want stop words?
     #
     # text_token_list = [
     #     word for word in text.split(" ") if word not in my_stopwords
@@ -51,8 +52,16 @@ def write_to_file(file_path: str, file_text: str) -> bool:
         return False
 
 
-def create_row_for_fast_text_doc(row, text_array):
-
+def create_row_for_fast_text_doc(row: pd.Series, text_array: List):
+    """
+    Purpose:
+        add cleaned text to an array
+    Args:
+        row - PD row
+        text_array - array for text
+    Returns:
+        N/A
+    """
     text = ""
     # get labels
     labels = row["labels"].split(",")
@@ -103,9 +112,10 @@ def convert_csv_to_fast_text_doc(df: pd.DataFrame):
     for string in text_array:
         final_text += string
 
+    # TODO should have a run folder each time we do train, to keep track of artifcats
     write_to_file("test.train", final_text)
 
-
+# TODO make an output folder?
 def train_model_from_csv(csv_location: str, model_name: str):
     """
     Purpose:
@@ -123,7 +133,7 @@ def train_model_from_csv(csv_location: str, model_name: str):
 
     if not "text" in df and not "labels" in df:
         logging.error("CSV must have text and labels fields")
-        return
+        raise ValueError("CSV must have text and labels fields")
 
     # convert df to fasttext format
     convert_csv_to_fast_text_doc(df)
