@@ -9,13 +9,6 @@ instatext: Train text classifiers instantly
 
 instatext leverages  `fasttext`, and `pandas`, for the heavy lifting
 
-Features
---------
-
-- Topic Extraction
-- Similarity Search
-- BM25 search ( word ranking search)
-- Topic Search
 
 Get it now
 ----------
