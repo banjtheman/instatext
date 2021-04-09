@@ -36,7 +36,8 @@ def predict(model_name: str, text: str, threshold: float = 0.5) -> Dict[str, Any
     Returns:
         json_resp - A dictonary with the label and the confidence
     """
-    model = fasttext.load_model(model_name + ".bin")
+    model_loc = f"instatext_model_{model_name}"
+    model = fasttext.load_model(f"{model_loc}/instatext.bin")
     predictions = model.predict(text, k=-1, threshold=threshold)
     json_resp = format_predictions(predictions)
 

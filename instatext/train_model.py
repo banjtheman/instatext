@@ -1,9 +1,14 @@
+import math
 import logging
+import os
 import re
 from typing import List
+import random
+
 import fasttext
 import pandas as pd
-from datetime import datetime
+
+# from datetime import datetime
 
 
 my_punctuation = "#!\"$%&'()*+,-./:;<=>?[\\]^_`{|}~•@“…ə"
@@ -86,16 +91,17 @@ def print_results(N: int, p: float, r: float):
     Returns:
         N/A
     """
-    logging.info("N\t" + str(N))
-    logging.info("P@{}\t{:.3f}".format(1, p))
-    logging.info("R@{}\t{:.3f}".format(1, r))
+    logging.info("Number tested\t" + str(N))
+    logging.info("Precision{}\t{:.3f}".format(1, p))
+    logging.info("Recall{}\t{:.3f}".format(1, r))
 
 
-def convert_csv_to_fast_text_doc(df: pd.DataFrame):
+def convert_csv_to_fast_text_doc(df: pd.DataFrame, model_loc: str):
     """
     Purpose:
         Transform csv to fasttext format
     Args:
+        model_loc: model location
         df - Dataframe of the csv
     Returns:
         N/A
@@ -108,21 +114,34 @@ def convert_csv_to_fast_text_doc(df: pd.DataFrame):
     # save it to a rand text file
     logging.info(text_array)
 
-    final_text = ""
-    for string in text_array:
-        final_text += string
+    # should randomize training and validation set
+    random.shuffle(text_array)
+
+    train_text = ""
+    valid_text = ""
+    # do a classic 80/20 split
+    train_len = math.ceil(len(text_array) * 0.8)
+
+    for string in text_array[0:train_len]:
+        train_text += string
+
+    for string in text_array[train_len:]:
+        valid_text += string
 
     # TODO should have a run folder each time we do train, to keep track of artifcats
-    write_to_file("test.train", final_text)
+    write_to_file(f"{model_loc}/instatext.train", train_text)
+    write_to_file(f"{model_loc}/instatext.valid", valid_text)
+
 
 # TODO make an output folder?
-def train_model_from_csv(csv_location: str, model_name: str):
+def train_model_from_csv(csv_location: str, model_name: str, overwrite: bool = False):
     """
     Purpose:
         Train a model from csv
     Args:
         csv_location - location of csv file
-        model_name - name of model file
+        model_name - name of model output folder
+        overwrite - overwrite existing file
     Returns:
         N/A
     """
@@ -135,15 +154,33 @@ def train_model_from_csv(csv_location: str, model_name: str):
         logging.error("CSV must have text and labels fields")
         raise ValueError("CSV must have text and labels fields")
 
+        # Create model output location
+
+    model_loc = f"instatext_model_{model_name}"
+
+    if os.path.exists(model_loc) and not overwrite:
+        raise OSError(f"Model {model_name} exists at {model_loc}")
+    try:
+        os.makedirs(model_loc, exist_ok=True)
+    except Exception as error:
+        raise OSError(error)
+
     # convert df to fasttext format
-    convert_csv_to_fast_text_doc(df)
+    convert_csv_to_fast_text_doc(df, model_loc)
 
     # Train model
+    # TODO do we want people to specify model params?
+    # if they knew what params they wanted..., they might as well use fasttext
     model = fasttext.train_supervised(
-        input="test.train", epoch=50, wordNgrams=5, bucket=200000, dim=50, loss="ova"
+        input=f"{model_loc}/instatext.train",
+        epoch=50,
+        wordNgrams=5,
+        bucket=200000,
+        dim=50,
+        loss="ova",
     )
 
-    print_results(*model.test("test.train", k=-1))
+    print_results(*model.test(f"{model_loc}/instatext.valid", k=-1))
     # save model
     # now = str(datetime.now())
-    model.save_model(model_name + ".bin")
+    model.save_model(f"{model_loc}/instatext.bin")
