@@ -252,7 +252,9 @@ def train_custom_model_from_csv(
     # TODO do we want people to specify model params?
     # if they knew what params they wanted..., they might as well use fasttext
 
-    model = model_function(f"{model_loc}/instatext.train")
+    model = model_function(
+        f"{model_loc}/instatext.train", f"{model_loc}/instatext.valid"
+    )
 
     print_results(*model.test(f"{model_loc}/instatext.valid", k=-1))
     # save model

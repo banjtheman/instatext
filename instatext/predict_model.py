@@ -1,6 +1,8 @@
 from typing import Any, Dict, Tuple
 import fasttext
 
+# Monkey patch remove annoying message
+fasttext.FastText.eprint = lambda x: None
 
 def format_predictions(predictions: Tuple) -> Dict[str, Any]:
     """
