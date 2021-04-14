@@ -167,7 +167,7 @@ def main():
         author="Banjo Obayomi",
         author_email="banjtheman@gmail.com",
         classifiers=[
-            "Development Status :: 5 - Production/Stable",
+            "Development Status :: 1 - Planning",
             "Intended Audience :: Developers",
             "Natural Language :: English",
             "Programming Language :: Python",
